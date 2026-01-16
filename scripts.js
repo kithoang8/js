@@ -560,6 +560,8 @@ $(document).ready(function() {
         },
         ignoreRightClick: true,
         shouldPreventDefault: false,
+      });
+        
         stop: function() {
           //$(".grid-item").removeClass("gridactive");
           clearInterval(easingInterval);
