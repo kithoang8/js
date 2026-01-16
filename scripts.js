@@ -21,6 +21,35 @@ var targetTiles = [-1, 0, 1, 2];
 var cursorTrans = 600;
 var is_mobile = false;
 
+function ensurePep(cb) {
+  // Pep already attached? Run now.
+  if (window.jQuery && jQuery.fn && typeof jQuery.fn.pep === "function") {
+    cb();
+    return;
+  }
+
+  // Already loading? wait.
+  if (window.__pepLoading) {
+    setTimeout(() => ensurePep(cb), 50);
+    return;
+  }
+
+  window.__pepLoading = true;
+
+  var s = document.createElement("script");
+  s.src = "https://cdn.jsdelivr.net/npm/jquery.pep@0.6.10/dist/jquery.pep.min.js";
+  s.onload = function () {
+    window.__pepLoading = false;
+    cb();
+  };
+  s.onerror = function () {
+    window.__pepLoading = false;
+    console.error("Failed to load jquery.pep");
+  };
+  document.head.appendChild(s);
+}
+
+
 function disableScroll() {
     scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     scrollLeft = window.pageXOffset || document.documentElement.scrollLeft,
@@ -443,7 +472,7 @@ $(document).ready(function() {
       img.onload = function() {
         imgWidths[e] = ((this.width / this.height) * gridHeight);
         if (imgWidths.length == gridLength && !imgWidths.includes(undefined)) {
-          initWall();
+          ensurePep(initWall);
         }
       }
       img.src = $(gridItems[e]).find(".imagevector").attr("src");
