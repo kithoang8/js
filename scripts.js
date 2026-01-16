@@ -22,14 +22,35 @@ var cursorTrans = 600;
 var is_mobile = false;
 
 function ensurePep(cb) {
-  if (window.jQuery && jQuery.fn && typeof jQuery.fn.pep === "function") return cb();
+  if (window.jQuery && jQuery.fn && typeof jQuery.fn.pep === "function") {
+    return cb();
+  }
 
-  var s = document.createElement("script");
-  s.src = "https://cdn.jsdelivr.net/npm/jquery.pep@0.6.10/dist/jquery.pep.min.js";
-  s.onload = cb;
-  s.onerror = function () { console.error("Failed to load jquery.pep"); };
-  document.head.appendChild(s);
+  // prevent loading multiple times
+  if (window.__pepLoading) {
+    return setTimeout(() => ensurePep(cb), 50);
+  }
+  window.__pepLoading = true;
+
+  fetch("https://cdn.prod.website-files.com/62137d00bd73f71a3a2a19f2/696a2fd061ec5029963918d8_jquery.pep.txt")
+    .then(r => {
+      if (!r.ok) throw new Error("Pep txt fetch failed: " + r.status);
+      return r.text();
+    })
+    .then(code => {
+      var s = document.createElement("script");
+      s.text = code;               // <-- inject as JS
+      document.head.appendChild(s);
+
+      window.__pepLoading = false;
+      cb();
+    })
+    .catch(err => {
+      window.__pepLoading = false;
+      console.error("Failed to load Pep from txt:", err);
+    });
 }
+
 
 
 function disableScroll() {
