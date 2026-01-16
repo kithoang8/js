@@ -21,6 +21,17 @@ var targetTiles = [-1, 0, 1, 2];
 var cursorTrans = 600;
 var is_mobile = false;
 
+function ensurePep(cb) {
+  if (window.jQuery && jQuery.fn && typeof jQuery.fn.pep === "function") return cb();
+
+  var s = document.createElement("script");
+  s.src = "https://cdn.jsdelivr.net/npm/jquery.pep@0.6.10/dist/jquery.pep.min.js";
+  s.onload = cb;
+  s.onerror = function () { console.error("Failed to load jquery.pep"); };
+  document.head.appendChild(s);
+}
+
+
 function disableScroll() {
     scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     scrollLeft = window.pageXOffset || document.documentElement.scrollLeft,
@@ -443,7 +454,7 @@ $(document).ready(function() {
       img.onload = function() {
         imgWidths[e] = ((this.width / this.height) * gridHeight);
         if (imgWidths.length == gridLength && !imgWidths.includes(undefined)) {
-          initWall();
+          ensurePep(initWall);
         }
       }
       img.src = $(gridItems[e]).find(".imagevector").attr("src");
@@ -548,33 +559,35 @@ $(document).ready(function() {
       var easingInterval;
       var currentGridPos = gridWall.offset();
 
-      $(gridWall).pep({
-        drag: function(ev, obj){
-          currentGridPos = gridWall.offset();
-          updateWallPos();
-        },
-        cssEaseDuration: "750",
-        cssEaseString: "cubic-bezier(0.165, 0.840, 0.440, 1.000)",
-        start: () => {
-          //$(".grid-item").addClass("gridactive");
-        },
-        ignoreRightClick: true,
-        shouldPreventDefault: false,
-      });
         
-        stop: function() {
-          //$(".grid-item").removeClass("gridactive");
-          clearInterval(easingInterval);
-          easingInterval = setInterval(() => {
-            if (!clickDisabled) {
-              updateWallPos();
-            }
-          }, 20);
-        },
-        rest: function() {
-          clearInterval(easingInterval);
-        },
-      });
+ensurePep(function () {
+  $(gridWall).pep({
+    drag: function (ev, obj) {
+      currentGridPos = gridWall.offset();
+      updateWallPos();
+    },
+    cssEaseDuration: "750",
+    cssEaseString: "cubic-bezier(0.165, 0.840, 0.440, 1.000)",
+    start: () => {
+      // $(".grid-item").addClass("gridactive");
+    },
+    stop: function () {
+      // $(".grid-item").removeClass("gridactive");
+      clearInterval(easingInterval);
+      easingInterval = setInterval(() => {
+        if (!clickDisabled) updateWallPos();
+      }, 20);
+    },
+    rest: function () {
+      clearInterval(easingInterval);
+    },
+    ignoreRightClick: true,
+    shouldPreventDefault: false
+  });
+
+  $.pep.toggleAll(true);
+});
+
 
       $.pep.toggleAll(true);
       $(gridWall).css("left", gridWallStartingOffsetLeft + "px");
